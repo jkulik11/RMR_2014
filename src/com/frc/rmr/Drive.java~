@@ -1,0 +1,49 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.frc.rmr;
+
+import edu.wpi.first.wpilibj.Watchdog;
+import edu.wpi.first.wpilibj.Joystick;
+
+/**
+ *
+ * @author jackson
+ */
+public class Drive {
+    
+    private int distance = 1; // test value, in feet
+    
+    private int pGain = 1;
+    private int dGain = 1;
+    
+    private int pOut = 0;
+    private int pError = 0;
+    private int lastPError = 0;
+    private int dOut = 0;
+    private int dError = 0;
+    
+    public Drive(Watchdog watch, Joystick joy) {
+	
+    }
+    // you must check in with the watchdog during your operations in auto mode
+    public void autoDrive() {
+
+    }
+    // called repeatedly, don't call the watchdog
+    public void run() {
+	// TODO: Move this into a method or class once it actually does something useful
+	// TODO: Information from the robot is used to
+	// calculate pError
+	// use encoder for distance
+	pError = 1 - 0;/* target point - current point */
+	pOut = pGain * pError;
+	
+	
+	dError = pError - lastPError;
+	dOut = dError * dGain;
+	
+	lastPError = pError;
+    }
+}
