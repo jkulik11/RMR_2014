@@ -4,12 +4,14 @@
  * and open the template in the editor.
  */
 
-package java.frc.drive;
+package com.frc.drive;
 
 /**
  *
  * @author ROBOTics
  */
-public class ControlledDrive {
+public class AutoDrive {
     
 }
+
+

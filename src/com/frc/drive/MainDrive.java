@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package java.frc.drive;
+package com.frc.drive;
 
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Jaguar;
@@ -14,12 +14,13 @@ import edu.wpi.first.wpilibj.PIDController;
  *
  * @author ROBOTics
  */
+
+
 /*
+public class MainDrive {
 
 private Watchdog watch;
 private Joystick joy;
-
-public class MainDrive(Watchdog watch, Joystick joy) {
     	this.watch = watch;
 	
 	this.joy = joy;

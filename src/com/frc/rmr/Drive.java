@@ -26,10 +26,10 @@ public class Drive {
     private static final double WHEEL_RADIUS = 3.0;
     private static final int TICKS_PER_ROTATION = 360;
     
-    private static final double KP = .3;
-    private static final double KI = 0;
-    private static final double KD = 0;
-    private static final double KF = .3;
+    private static final double KP = .1;
+    private static final double KI = .2;
+    private static final double KD = .1;
+    private static final double KF = 0;
     
     private static final int RIGHT_MOTOR_PORT = 2;
     private static final int[] RIGHT_ENCODER_CHANNELS = {1, 2};
@@ -64,9 +64,10 @@ public class Drive {
 	rightEncoder.start();
 	rightEncoder.reset();
 	// changing this and leftEncoder's setPIDSource will make it run on teleop or auto
-	rightEncoder.setPIDSourceParameter(Encoder.PIDSourceParameter.kRate);
+	rightEncoder.setPIDSourceParameter(Encoder.PIDSourceParameter.kDistance);
 	
-	rightController = new PIDController(KP, KI, KD, KF, rightEncoder, rightMotor);
+	// TODO: IMPORTANT: This is a distance PID, it is NOT being passed KF
+	rightController = new PIDController(KP, KI, KD, rightEncoder, rightMotor);
 	rightController.enable();
 	rightController.setInputRange(-MAX_SPEED, MAX_SPEED);
 	rightController.setOutputRange(-MAX_SPEED, MAX_SPEED);
@@ -78,9 +79,10 @@ public class Drive {
 	leftEncoder.start();
 	leftEncoder.reset();
 	// changing this and rightEncoder's setPIDSource will make it run on teleop or auto
-	leftEncoder.setPIDSourceParameter(Encoder.PIDSourceParameter.kRate);
+	leftEncoder.setPIDSourceParameter(Encoder.PIDSourceParameter.kDistance);
 	
-	leftController = new PIDController(KP, KI, KD, KF, leftEncoder, leftMotor);
+		// TODO: IMPORTANT: This is a distance PID, it is NOT being passed KF
+	leftController = new PIDController(KP, KI, KD, leftEncoder, leftMotor);
 	leftController.enable();
 	leftController.setInputRange(-MAX_SPEED, MAX_SPEED);
 	leftController.setOutputRange(-MAX_SPEED, MAX_SPEED);
@@ -140,8 +142,9 @@ public class Drive {
     public void run() {
 	
 	if (Math.abs(joy.getRawAxis(XboxMap.LeftJoyVert)) >= .05) {
-	    leftController.setSetpoint(.5); //joy.getRawAxis(XboxMap.LeftJoyVert));
-	    rightController.setSetpoint(.5);  //joy.getRawAxis(XboxMap.LeftJoyVert));
+	    // TODO: IMPORTANT: This is temporarily a distance PID give it .5 later
+	    leftController.setSetpoint(10); ////joy.getRawAxis(XboxMap.LeftJoyVert));
+	    rightController.setSetpoint(10);  //joy.getRawAxis(XboxMap.LeftJoyVert));
 	} else {
 	    leftController.setSetpoint(0);
 	    rightController.setSetpoint(0);
