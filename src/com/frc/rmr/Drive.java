@@ -21,14 +21,18 @@ import edu.wpi.first.wpilibj.Encoder;
  */
 
 public class Drive {
+    
+    public static final int MANUAL_MODE = 0;
+    public static final int AUTO_MODE = 1;
+    
     //jaguar input from -1 to 1
-    private static final double MAX_SPEED = .4;
+    private static final double MAX_SPEED = 15;//.4;
     private static final double WHEEL_RADIUS = 3.0;
     private static final int TICKS_PER_ROTATION = 360;
     
-    private static final double KP = .1;
-    private static final double KI = .2;
-    private static final double KD = .1;
+    private static final double KP = 0;//.1;
+    private static final double KI = 0; //.2;
+    private static final double KD = 0; //.1;
     private static final double KF = 0;
     
     private static final int RIGHT_MOTOR_PORT = 2;
@@ -49,73 +53,65 @@ public class Drive {
     private boolean[] buttonWasPressed;
     private Jaguar rightMotor;
     private Jaguar leftMotor;
+    private Encoder leftEncoder;
+    private Encoder rightEncoder;
     
+    // TODO: temporary
+    int count = 0;
+    double closestLeft = 100;
+    double closestRight = 100;
+	    
     public Drive(Watchdog watch, Joystick joy) {
 	this.watch = watch;
 	
 	this.joy = joy;
 	buttonWasPressed = new boolean[10];
-	for (int i = 0; i < 10; ++i) { buttonWasPressed[i] = false; }
+	for (int i = 0; i < 10; ++i) {
+	    buttonWasPressed[i] = false;
+	}
 	
-	// create the right pid motor and controller
 	rightMotor = new Jaguar(RIGHT_MOTOR_PORT);
-	Encoder rightEncoder = new Encoder(RIGHT_ENCODER_CHANNELS[0], RIGHT_ENCODER_CHANNELS[1]);
+	leftMotor = new Jaguar(LEFT_MOTOR_PORT);
+	
+	rightEncoder = new Encoder(RIGHT_ENCODER_CHANNELS[0], RIGHT_ENCODER_CHANNELS[1]);
 	rightEncoder.setDistancePerPulse(DISTANCE_PER_PULSE);
 	rightEncoder.start();
 	rightEncoder.reset();
-	// changing this and leftEncoder's setPIDSource will make it run on teleop or auto
-	rightEncoder.setPIDSourceParameter(Encoder.PIDSourceParameter.kDistance);
-	
-	// TODO: IMPORTANT: This is a distance PID, it is NOT being passed KF
-	rightController = new PIDController(KP, KI, KD, rightEncoder, rightMotor);
-	rightController.enable();
-	rightController.setInputRange(-MAX_SPEED, MAX_SPEED);
-	rightController.setOutputRange(-MAX_SPEED, MAX_SPEED);
-	
-	// create the left pid motor and controller
-	leftMotor = new Jaguar(LEFT_MOTOR_PORT);
-	Encoder leftEncoder = new Encoder(LEFT_ENCODER_CHANNELS[0], LEFT_ENCODER_CHANNELS[1]);
+	leftEncoder = new Encoder(LEFT_ENCODER_CHANNELS[0], LEFT_ENCODER_CHANNELS[1]);
 	leftEncoder.setDistancePerPulse(DISTANCE_PER_PULSE);
 	leftEncoder.start();
 	leftEncoder.reset();
-	// changing this and rightEncoder's setPIDSource will make it run on teleop or auto
-	leftEncoder.setPIDSourceParameter(Encoder.PIDSourceParameter.kDistance);
 	
-		// TODO: IMPORTANT: This is a distance PID, it is NOT being passed KF
-	leftController = new PIDController(KP, KI, KD, leftEncoder, leftMotor);
-	leftController.enable();
-	leftController.setInputRange(-MAX_SPEED, MAX_SPEED);
-	leftController.setOutputRange(-MAX_SPEED, MAX_SPEED);
+	// TOOD: should this be called in the MainRobot class?
+	setDriveMode(AUTO_MODE);
     }
     // you must check in with the watchdog during your operations in auto mode
 
-    public void autoDrive() {
-	/*
-	// create the right pid motor and controller
-	Jaguar rightMotor = new Jaguar(RIGHT_MOTOR_PORT);
-	Encoder rightEncoder = new Encoder(RIGHT_ENCODER_CHANNELS[0], RIGHT_ENCODER_CHANNELS[1]);
+    public void setDriveMode(int mode) {
+	if(mode == MANUAL_MODE) {
+	    leftController = new PIDController(KP, KI, KD, KF, leftEncoder, leftMotor);
+	    rightController = new PIDController(KP, KI, KD, KF, rightEncoder, rightMotor);
+	    rightEncoder.setPIDSourceParameter(Encoder.PIDSourceParameter.kRate);
+	    leftEncoder.setPIDSourceParameter(Encoder.PIDSourceParameter.kRate);
+	} else if (mode == AUTO_MODE) {
+	    leftController = new PIDController(KP, KI, KD, leftEncoder, leftMotor);
+	    rightController = new PIDController(KP, KI, KD, rightEncoder, rightMotor);
+	    rightEncoder.setPIDSourceParameter(Encoder.PIDSourceParameter.kDistance);
+	    leftEncoder.setPIDSourceParameter(Encoder.PIDSourceParameter.kDistance);
+	}
+	leftController.setInputRange(-MAX_SPEED, MAX_SPEED);
+	leftController.setOutputRange(-MAX_SPEED, MAX_SPEED);
+	rightController.setInputRange(-MAX_SPEED, MAX_SPEED);
+	rightController.setOutputRange(-MAX_SPEED, MAX_SPEED);
 	
-	rightEncoder.setDistancePerPulse(DISTANCE_PER_PULSE);
-	rightEncoder.start();
-	rightEncoder.reset();
-	rightEncoder.setPIDSourceParameter(Encoder.PIDSourceParameter.kDistance);
-	PIDController rightController = new PIDController(KP, KI, KD, rightEncoder, rightMotor);
-	rightController.enable();
+	rightController.setAbsoluteTolerance(5);
+	leftController.setAbsoluteTolerance(5);
 	
-	// create the left pid motor and controller
-	Jaguar leftMotor = new Jaguar(LEFT_MOTOR_PORT);
-	Encoder leftEncoder = new Encoder(LEFT_ENCODER_CHANNELS[0], LEFT_ENCODER_CHANNELS[1]);
-	leftEncoder.setDistancePerPulse(DISTANCE_PER_PULSE);
-	leftEncoder.start();
-	leftEncoder.reset();
-	leftEncoder.setPIDSourceParameter(Encoder.PIDSourceParameter.kDistance);
-	PIDController leftController = new PIDController(KP, KI, KD, leftEncoder, leftMotor);
 	leftController.enable();
-	
-	// TODO: missing actual distance code and control
-	
-	// TODO: remove
-*/
+	rightController.enable();
+    }
+    
+    public void autoDrive() {
 	
 	// leftController.setSetpoint(1000);
 	// rightController.setSetpoint(1000);
@@ -141,10 +137,36 @@ public class Drive {
     // called repeatedly, don't call the watchdog
     public void run() {
 	
+	if(Math.abs(leftController.getError()) < closestLeft && leftController.getError() != 0) {
+	    closestLeft = leftController.getError();
+	}
+	if(Math.abs(rightController.getError()) < closestRight && rightController.getError() != 0) {
+	    closestRight = rightController.getError();
+	}
+	
+	if(rightController.onTarget()) {
+	    System.out.println("on target");
+	    rightController.setSetpoint(0);
+	}
+	
+	if(leftController.onTarget()) {
+	    System.out.println("on target");
+	    leftController.setSetpoint(0);
+	}
+	
+	if(count++ % 50000 == 0) {
+	    System.out.println("left error: " + leftController.getError());
+	    System.out.println("closest left error: " + closestLeft);
+	    System.out.println("right error: " + rightController.getError());
+	    System.out.println("closest right error: " + closestRight);
+	}
+		    
 	if (Math.abs(joy.getRawAxis(XboxMap.LeftJoyVert)) >= .05) {
 	    // TODO: IMPORTANT: This is temporarily a distance PID give it .5 later
 	    leftController.setSetpoint(10); ////joy.getRawAxis(XboxMap.LeftJoyVert));
 	    rightController.setSetpoint(10);  //joy.getRawAxis(XboxMap.LeftJoyVert));
+
+	   // System.out.println()
 	} else {
 	    leftController.setSetpoint(0);
 	    rightController.setSetpoint(0);
