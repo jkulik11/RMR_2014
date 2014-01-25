@@ -39,8 +39,8 @@ class Point {
 public class Vision {
     
     final int MIN_CORNERS_FOR_HOT = 6;
-    final int MAX_DISTANCE = 7;
-    final int MIN_DISTANCE = 5;
+    final int MAX_DISTANCE = 150;
+    final int MIN_DISTANCE = 130;
     
     final double GOAL_WIDTH = 29.0;
     final double SCREEN_RES_WIDTH = 640.0;
@@ -88,10 +88,25 @@ public class Vision {
 	    // Inaccurate at front of the room-7in.
 		
 	    // Calculates the horizontal distance to the goal
-	    double distance = ((GOAL_WIDTH / 2 * SCREEN_RES_WIDTH / (points[points.length-1].x - points[0].x) ) / CAM_VIEW_TANGENT);
+	    
+	    double distance;
+	    try {
+		distance = ((GOAL_WIDTH / 2 * SCREEN_RES_WIDTH / (points[points.length-1].x - points[0].x) ) / CAM_VIEW_TANGENT);
+	    
+		if (distance >= 300)
+		{
+		    throw new Exception();
+		}
 		
+	    }
+	    catch (Exception e)
+	    {
+		distance = 99999999;
+	    }
 	    // Outputs that to the smart dashboard
 	    SmartDashboard.putBoolean("In Range", distance >= MIN_DISTANCE && distance <= MAX_DISTANCE);
+	    
+	    SmartDashboard.putNumber("Distance", distance);
 	    
 	}
 	catch (Exception e)
