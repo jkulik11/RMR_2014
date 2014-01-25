@@ -26,13 +26,13 @@ public class Drive {
     public static final int AUTO_MODE = 1;
     
     //jaguar input from -1 to 1
-    private static final double MAX_SPEED = 15;//.4;
+    private static final double MAX_SPEED = .5;
     private static final double WHEEL_RADIUS = 3.0;
     private static final int TICKS_PER_ROTATION = 360;
     
-    private static final double KP = 0;//.1;
-    private static final double KI = 0; //.2;
-    private static final double KD = 0; //.1;
+    private static final double KP = 0;//.6;
+    private static final double KI = 0; //.6;
+    private static final double KD = 0; //0;
     private static final double KF = 0;
     
     private static final int RIGHT_MOTOR_PORT = 2;
@@ -107,8 +107,9 @@ public class Drive {
 	rightController.setAbsoluteTolerance(5);
 	leftController.setAbsoluteTolerance(5);
 	
-	leftController.enable();
-	rightController.enable();
+	// TODO: is this needed?
+	rightMotor.set(0);
+	leftMotor.set(0);
     }
     
     public void autoDrive() {
@@ -144,32 +145,35 @@ public class Drive {
 	    closestRight = rightController.getError();
 	}
 	
-	if(rightController.onTarget()) {
-	    System.out.println("on target");
-	    rightController.setSetpoint(0);
+	if(rightController.onTarget() && rightController.getSetpoint() != 0) {
+	    rightController.disable();
+	    rightMotor.set(0);
 	}
 	
-	if(leftController.onTarget()) {
-	    System.out.println("on target");
-	    leftController.setSetpoint(0);
+	if(leftController.onTarget() && leftController.getSetpoint() != 0) {
+	    leftController.disable();
+	    leftMotor.set(0);
 	}
 	
 	if(count++ % 50000 == 0) {
 	    System.out.println("left error: " + leftController.getError());
-	    System.out.println("closest left error: " + closestLeft);
+	    System.out.println("closest left error:  " + closestLeft);
 	    System.out.println("right error: " + rightController.getError());
 	    System.out.println("closest right error: " + closestRight);
 	}
 		    
 	if (Math.abs(joy.getRawAxis(XboxMap.LeftJoyVert)) >= .05) {
 	    // TODO: IMPORTANT: This is temporarily a distance PID give it .5 later
-	    leftController.setSetpoint(10); ////joy.getRawAxis(XboxMap.LeftJoyVert));
-	    rightController.setSetpoint(10);  //joy.getRawAxis(XboxMap.LeftJoyVert));
+	    leftController.enable();
+	    rightController.enable();
+	    leftController.setSetpoint(1000); ////joy.getRawAxis(XboxMap.LeftJoyVert));
+	    rightController.setSetpoint(1000);  //joy.getRawAxis(XboxMap.LeftJoyVert));
+
 
 	   // System.out.println()
 	} else {
-	    leftController.setSetpoint(0);
-	    rightController.setSetpoint(0);
+	    // leftController.disable();
+	    // rightController.disable();
 	}
 	
 	double tuningSize = .1;

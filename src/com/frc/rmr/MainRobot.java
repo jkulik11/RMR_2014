@@ -39,6 +39,7 @@ public class MainRobot extends SimpleRobot {
 	* This function is called once each time the robot enters autonomous mode.
 	*/
 	public void autonomous() {
+		// Distance array might not be necessary
 		int[] distances = new int[2];
 		boolean isHot = vision.isHot(distances);
 		watchdog.feed();
